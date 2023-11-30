@@ -66,3 +66,7 @@ final HW data:
 * WEEK_NO - номер недели (я так понял среди вот этих двух лет ао которым выгрузка)
 * COUPON_DISC - что то про купон
 * COUPON_MATCH_DISC - что то про купон х2
+
+
+![R_lang_final_task](https://github.com/s21dlemanskiy/R_Lemanskiy_Konstantin/assets/55732402/a3832817-086c-4b3e-8e59-368cd347dc72)
+
