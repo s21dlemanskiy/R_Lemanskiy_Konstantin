@@ -1,0 +1,101 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(shiny)
+library(shinydashboard)
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(plotly)
+library(sqldf)
+setwd("C:/Users/vniiz/Desktop/del_it/R_Lemanskiy_Konstantin")
+```
+```{r}
+campaign_desc <- read_csv("data/campaign_desc.csv", col_types = "ciii")
+campaign_table <- read_csv("data/campaign_table.csv", col_types = "cii")
+causal_data <- read_csv("data/causal_data.csv", col_types = "iiicc")
+coupon <- read_csv("data/coupon.csv", col_types = "cii")
+coupon_redempt <- read_csv("data/coupon_redempt.csv", col_types = "iici")
+hh_demographic <- read_csv("data/hh_demographic.csv", col_types = "ccccccc")
+product <- read_csv("data/product.csv", col_types = "iiccccc")
+transaction_data <- read_csv("data/transaction_data.csv", col_types = "iciiididiidd")
+```
+
+```{r}
+df <- sqldf("select
+            t1.household_key,
+            t1.BASKET_ID,
+            t1.DAY,
+            t1.PRODUCT_ID,
+            t1.QUANTITY,
+            t1.SALES_VALUE,
+            t1.STORE_ID,
+            t1.RETAIL_DISC,
+            t1.TRANS_TIME,
+            t1.WEEK_NO,
+            t1.COUPON_DISC,
+            t1.COUPON_MATCH_DISC,
+            t2.MANUFACTURER,
+            t2.DEPARTMENT,
+            t2.BRAND,
+            t2.COMMODITY_DESC,
+            t2.SUB_COMMODITY_DESC,
+            t2.CURR_SIZE_OF_PRODUCT,
+            t3.AGE_DESC,
+            t3.MARITAL_STATUS_CODE,
+            t3.INCOME_DESC,
+            t3.HOMEOWNER_DESC,
+            t3.HH_COMP_DESC,
+            t3.HOUSEHOLD_SIZE_DESC,
+            t3.KID_CATEGORY_DESC
+            from transaction_data as t1
+      INNER JOIN product as t2
+      ON t1.PRODUCT_ID = t2.PRODUCT_ID
+      INNER JOIN hh_demographic as t3
+      ON t1.household_key = t3.household_key")
+head(df)
+write.csv(df, "data/df.csv", row.names=FALSE)
+```
+```{r}
+transaction_data$time_of_day <- lapply(transaction_data$TRANS_TIME, find_time_of_day)
+print(transaction_data %>% group_by(time_of_day) %>% summarise(count = n()))
+```
+
+```{r}
+df <- sqldf('select 
+                          *,
+                          CASE
+                              WHEN TRANS_TIME < 1300 THEN "До обеда"
+                              ELSE "после обеда"
+                          END as time_of_day
+                          FROM df as t1')
+```
+
+
+```{r}
+print(sqldf(' select 
+              time_of_day,
+              count(*)
+              FROM df as t1
+              GROUP BY time_of_day'))
+```
+
+```{r}
+df <- read_csv("data/df.csv", col_types = "iciiididiiddicccccccccccccccc")
+head(df)
+```
+
+```{r}
+campaign_desc <- read_csv("data/campaign_desc.csv", col_types = "ciii")
+```
+
+
+```{r}
+head(campaign_desc)
+```
+
