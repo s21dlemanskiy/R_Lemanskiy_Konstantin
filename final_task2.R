@@ -28,8 +28,10 @@ library (psych)
 library (rcompanion)
 library(caTools)
 library(Metrics) 
+library(tidymodels)
+library(tidyr)
 setwd("C:/Users/vniiz/Desktop/del_it/R_Lemanskiy_Konstantin")
-set.seed(1)
+set.seed(1224)
 # campaign_desc <- read_csv("data/campaign_desc.csv", col_types = "ciii")
 # campaign_table <- read_csv("data/campaign_table.csv", col_types = "cii")
 # causal_data <- read_csv("data/causal_data.csv", col_types = "iiicc")
@@ -159,7 +161,7 @@ View(corr_matrix$rho)
 model <- lm(target ~ HOUSEHOLD_SIZE_DESC, data=df)
 plot(target ~ HOUSEHOLD_SIZE_DESC, data=df, pch = 16, col = "blue") #Plot the results
 print(abline(model))
-cat("shitty model mae:", mae(df$target,predict(model, newdata=subset(df, select = c(HOUSEHOLD_SIZE_DESC)))), "\n")
+cat("shitty model mae:", Metrics::mae(df$target,predict(model, new_data=subset(df, select = c(HOUSEHOLD_SIZE_DESC)))), "\n")
 
 
 
@@ -172,7 +174,35 @@ test   <- subset(df, sample == FALSE)
 test_label <- test$target
 test_features <- subset(test, select = -c(target))
 
+RSQUARE = function(y_actual,y_predict){
+  cor(y_actual,y_predict)^2
+}
+
 model <- lm(target ~ ., data=train)
 print(summary(model))
-cat("train mae result:", mae(train_label,predict(model, newdata=train_features)), "\n")
-cat("test mae result:", mae(test_label,predict(model, newdata=test_features)))
+cat("LineReg train mae result:", Metrics::mae(train_label,predict(model, newdata=train_features)), "\n")
+cat("LineReg test mae result:", Metrics::mae(test_label,predict(model, newdata=test_features)), "\n")
+cat("LineReg train RSQUARE result:", RSQUARE(train_label,predict(model, newdata=train_features)), "\n")
+cat("LineReg test RSQUARE result:", RSQUARE(as.vector(test_label),as.vector(predict(model, newdata=test_features))))
+
+
+
+tree_spec <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("regression")
+
+tree_fit <- tree_spec %>%
+  fit(target ~ ., data=train)
+
+print(summary(tree_fit))
+# print(as.vector(predict(tree_fit, new_data=train_features)$.pred))
+# print(as.vector(train_label))
+# cat(predict(tree_fit, new_data=test_features))
+cat("DT train mae result:", Metrics::mae(as.vector(train_label),as.vector(predict(tree_fit, new_data=train_features)$.pred)), "\n")
+cat("DT test mae result:", Metrics::mae(as.vector(test_label),as.vector(predict(tree_fit, new_data=test_features)$.pred)), "\n")
+cat("DT train RSQUARE result:", RSQUARE(as.vector(train_label),as.vector(predict(tree_fit, new_data=train_features)$.pred)), "\n")
+cat("DT test RSQUARE result:", RSQUARE(as.vector(test_label),as.vector(predict(tree_fit, new_data=test_features)$.pred)), "\n")
+
+cat("predict data for:\n")
+print(test_features[5])
+cat(predict(model, newdata=test_features[5]))
